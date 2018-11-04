@@ -89,9 +89,13 @@ class SimpleSlider extends React.Component {
 
       // const b = document.getElementsByClassName("Dj");
       // console.log("b:",b);
-      const countInfoSpan = document.querySelector('.Dj');
+      let countInfoSpan = document.querySelectorAll('.Dj');
       console.log('pages:', countInfoSpan);
       if (countInfoSpan) {
+        if (countInfoSpan.length > 1) {
+          console.log('countInfoSpan.length:', countInfoSpan.length);
+        }
+        countInfoSpan = countInfoSpan[countInfoSpan.length - 1];
         const countInfos = countInfoSpan.querySelectorAll('.ts');
 
         if (!countInfos) {
