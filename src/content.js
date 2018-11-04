@@ -46,12 +46,13 @@ const styles = {
 
 class SimpleSlider extends React.Component {
   state = {
-    totalPages: 1,
-    currentPage: 1,
+    totalPages: 0,
+    currentPage: 0,
   };
 
   componentDidMount() {
     this.threadsPerPage = 0;
+    this.total = -1; // first/last may be set to this.first/last, too, 因為它們也不是很準
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log('on message requset:', request);
       if (request.message === 'tab_update_completed') {
@@ -70,7 +71,7 @@ class SimpleSlider extends React.Component {
   onTabUpdated = () => {
     let first;
     let last;
-    let total;
+    // let total;
     // let threadsPerPage;
     let currentPage;
 
@@ -105,20 +106,23 @@ class SimpleSlider extends React.Component {
         // e.g. 35,917, to remove "," comma
         // TODO: replace 方法可能不適用每個 locale, 要用 library
         // https://stackoverflow.com/questions/11665884/how-can-i-parse-a-string-with-a-comma-thousand-separator-to-a-number
-        total = parseInt(countInfos[2].innerHTML.replace(/,/g, ''));
+        if (this.total === -1) {
+          this.total = parseInt(countInfos[2].innerHTML.replace(/,/g, ''));
+        }
 
         // 兩個問題 x a. 直接打開p10/或托到p10, 有時已 show p10, 但字此時會抓到舊的 1~25, 有 workaround way
         // x b. slider 已設定 value, 但 ui 沒有更新 !! 拖到某一頁 (沒再看到)
         console.log('first/last:', first, last);
-        console.log('total:', total);
+        console.log('total:', this.total);
 
+        // first 可能不會更新
         // 1. 怎麼區別 new ui? old UI 的第一頁 跟 new ui (url永遠無page number) 是不可分的
         // 2. 所以 new ui 無法知道是第幾頁?  因為無page in url
         // 如果是文字show 101~110, 也可能是抓到還沒更新的上一頁page span !!
         // 以上兩問題只要有 瞬間錯誤 case 就無法解決 (不, 新ui可以去抓有無 ad/社群 tab 來區別!!!)
         // p.s. new ui 其一頁有幾個可以得到(因為一定從第一頁進去), new ui也無法使直接url跳到某頁
         if (first) {
-          if (first >= total) {
+          if (first >= this.total) {
             console.log('it might be page_url is large than maximal page, temp situation');
           } else {
             const urlPaths = url.split('#inbox/p');
@@ -144,7 +148,7 @@ class SimpleSlider extends React.Component {
                   this.threadsPerPage = last - first + 1;
                 }
               }
-            } else if (last === total) {
+            } else if (last === this.total) {
               // 只有一頁, 不用 show slider
               // old ui, new ui 都有可能, 無法判斷一頁幾個, 此時 slider 也不需要 show
               console.log('case3, no page number in url but fast=last, only 1 page');
@@ -163,27 +167,51 @@ class SimpleSlider extends React.Component {
           console.log('no email');
         }
 
-        if (this.threadsPerPage) {
-          console.log('threadsPerPage:', this.threadsPerPage);
-          console.log('currentPage:', currentPage);
+        // if (this.threadsPerPage) {
+        //   console.log('threadsPerPage:', this.threadsPerPage);
+        //   console.log('currentPage:', currentPage);
 
-          const totalPages = Math.ceil(total / this.threadsPerPage);
-          console.log('update UI !!!');
-          this.setState({
-            totalPages,
-            currentPage,
-          });
-        } else {
-          // TODO:
-          // 1. 把 全部 ui 住, 因為可能從兩頁變成一頁
-          // 不然就是只有一頁也要 show slider !!
-        }
-      } else {
-        // 1. case1 no any emails
-        // 2. case2: new UI
-        // TODO:
-        // 1. 把 全部 ui 住
-      }
+        //   const totalPages = Math.ceil(total / this.threadsPerPage);
+        //   console.log('update UI !!!');
+        //   this.setState({
+        //     totalPages,
+        //     currentPage,
+        //   });
+        // } else {
+        //   // TODO:
+        //   // 1. 把 全部 ui 住, 因為可能從兩頁變成一頁
+        //   // 不然就是只有一頁也要 show slider !!
+        // }
+      } // else {
+      // *1. case1 no any emails
+      // 2. case2: new UI
+      // TODO:
+      // 1. 把 全部 ui 住
+      // }
+    } else {
+      console.log('other label, not inbox');
+      // TODO:
+      // 如果先到inbox -> 其他 label -> 回來 inbox, total 可能會停留在其他label的總數 !!
+      // 所以 total 只能設定一次, 如果要推到其他 label, 則要各字存 每個 label的 first/last/total
+    }
+
+    if (currentPage) {
+      console.log('threadsPerPage:', this.threadsPerPage);
+      console.log('currentPage:', currentPage);
+
+      const totalPages = Math.ceil(this.total / this.threadsPerPage);
+      console.log('update UI !!!');
+      this.setState({
+        totalPages,
+        currentPage, // 被改的時機 a. 如果直接開 p10 url, b.1 slide change
+        // b.2. slide change會trigger url, 然後再set新的值一次
+      });
+    } else {
+      console.log('hide ui, reset totalPages = 0');
+
+      this.setState({
+        totalPages: 0,
+      });
     }
   }
 
@@ -206,7 +234,7 @@ class SimpleSlider extends React.Component {
   }
 
   onSliderChange = (event, value) => {
-    console.log('slider change:', value);
+    // console.log('slider change:', value);
     this.setState({ currentPage: value });
   };
 
@@ -215,7 +243,7 @@ class SimpleSlider extends React.Component {
 
     const { currentPage, totalPages } = this.state;
     // console.log('value/total in render:', currentPage, totalPages);
-    return (
+    const element = totalPages > 0 ? (
       <div style={{ display: 'flex' }}>
         <Slider
           classes={{ container: classes.slider }}
@@ -229,7 +257,8 @@ class SimpleSlider extends React.Component {
         />
         <Typography style={{ width: '70px' }} id="label">{`${currentPage}/${totalPages}`}</Typography>
       </div>
-    );
+    ) : <div />;
+    return element;
   }
 }
 SimpleSlider.propTypes = {
