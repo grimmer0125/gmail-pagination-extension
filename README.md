@@ -1,5 +1,12 @@
 # Gmail Inbox pagination extension
 
+## Usage
+
+CurrentPage/TotalPage for Inbox:
+
+![Screenshot](
+https://raw.githubusercontent.com/grimmer0125/grimmer0125.github.io/master/images/chrome-inbox-extension.png)
+
 ## How to use create-react-app for Chrome extension's content script 
 
 This is a learning note to record the procedure. The code is already applied. 
