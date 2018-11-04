@@ -1,49 +1,100 @@
-// import React, { Component } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-import React, { Component } from 'react';
-import {
-  Grid, Input, Pagination, Segment,
-} from 'semantic-ui-react';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+// import Typography from '@material-ui/core/Typography';
+import Slider from '@material-ui/lab/Slider';
 
-export default class PaginationExampleControlled extends Component {
-  state = { activePage: 1 }
+const styles = {
+  root: {
+    width: 300,
+  },
+  slider: {
+    padding: '22px 0px', // top, right, down, left
+  },
+};
 
-  handleInputChange = (e, { value }) => this.setState({ activePage: value })
+class SimpleSlider extends React.Component {
+  state = {
+    value: 50,
+  };
 
-  handlePaginationChange = (e, { activePage }) => this.setState({ activePage })
+  onDragEnd = (event, value) => {
+    console.log('slider onDragEnd');
+  }
+
+  handleChange = (event, value) => {
+    console.log('slider change:', value);
+    this.setState({ value });
+  };
 
   render() {
-    const { activePage } = this.state;
+    const { classes } = this.props;
+
+    const { value } = this.state;
 
     return (
-      <Grid columns={2} verticalAlign="middle">
-        <Grid.Column>
-          <Segment secondary>
-            <div>
-activePage:
-              {activePage}
-            </div>
-            <Input
-              min={1}
-              max={5}
-              onChange={this.handleInputChange}
-              type="range"
-              value={activePage}
-            />
-          </Segment>
-        </Grid.Column>
-        <Grid.Column>
-          <Pagination
-            activePage={activePage}
-            onPageChange={this.handlePaginationChange}
-            totalPages={5}
-          />
-        </Grid.Column>
-      </Grid>
+      <div className={classes.root}>
+        {/* <Typography id="label">Slider label</Typography> */}
+        <Slider
+          classes={{ container: classes.slider }}
+          value={value}
+          aria-labelledby="label"
+          onChange={this.handleChange}
+          onDragEnd={this.onDragEnd}
+        />
+      </div>
     );
   }
 }
+SimpleSlider.propTypes = {
+  classes: PropTypes.object.isRequired,
+};
+const Slider2 = withStyles(styles)(SimpleSlider);
+// export default withStyles(styles)(SimpleSlider);
+
+// import {
+//   Grid, Input, Pagination, Segment,
+// } from 'semantic-ui-react';
+// export default class PaginationExampleControlled extends Component {
+//   state = { activePage: 1 }
+
+//   handleInputChange = (e, { value }) => this.setState({ activePage: value })
+
+//   handlePaginationChange = (e, { activePage }) => this.setState({ activePage })
+
+//   render() {
+//     const { activePage } = this.state;
+
+//     return (
+//       <Grid columns={2} verticalAlign="middle">
+//         <Grid.Column>
+//           <Segment secondary>
+//             <div>
+// activePage:
+//               {activePage}
+//             </div>
+//             <Input
+//               min={1}
+//               max={5}
+//               onChange={this.handleInputChange}
+//               type="range"
+//               value={activePage}
+//             />
+//           </Segment>
+//         </Grid.Column>
+//         <Grid.Column>
+//           <Pagination
+//             activePage={activePage}
+//             onPageChange={this.handlePaginationChange}
+//             totalPages={5}
+//           />
+//         </Grid.Column>
+//       </Grid>
+//     );
+//   }
+// }
 
 console.log('in contentScript');
 console.log('current page url:', window.location.href);
@@ -56,7 +107,7 @@ const newNode = document.createElement('div');
 newNode.setAttribute('id', 'root2');
 
 newNode.style.backgroundColor = 'yellow';
-newNode.style.height = '100px'; // 32
+newNode.style.height = '60px'; // 32
 newNode.style.width = '800px'; // 640
 // Get the reference node
 // const referenceNode = document.getElementById(':3'); //document.querySelector('#:3');
@@ -79,8 +130,8 @@ document.body.appendChild(newNode);
 // }
 // export default App2;
 
-ReactDOM.render(<PaginationExampleControlled />, newNode);
-
+// ReactDOM.render(<PaginationExampleControlled />, newNode);
+ReactDOM.render(<Slider2 />, newNode);
 
 // let test = 0;
 
