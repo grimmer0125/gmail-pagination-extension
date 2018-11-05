@@ -50,7 +50,7 @@ function findCountInfo(node, type) {
       const last = parseInt(countInfos[1].innerHTML.replace(/,/g, ''), 10);
       const total = parseInt(countInfos[2].innerHTML.replace(/,/g, ''), 10);
 
-      // console.log('first/last/total in monitor:', first, last, total, type);
+      // console.log('first/last/total in monitor:', first, last, total);
       return { first, last, total };
     }
   }
@@ -72,7 +72,6 @@ class SimpleSlider extends React.Component {
     // url part
     chrome.runtime.onMessage.addListener((request) => {
       if (request.message === 'tab_update_completed') {
-        console.log('tab_update_completed !!');
         const url = window.location.href;
         const pageStr = url.replace(/.*\/#(?!search).*\/p/g, '');
         let currentPage;
@@ -93,11 +92,7 @@ class SimpleSlider extends React.Component {
     // span part
     const observer = new MutationObserver(((mutations, me) => {
       let newCountData = null;
-      mutations.forEach((mutation) => {
-        if (mutation.target) {
-          newCountData = findCountInfo(mutation.target, mutation.type);
-        }
-      });
+      newCountData = findCountInfo(document);
 
       if (newCountData && newCountData.total) {
         this.setState({ countData: newCountData });
@@ -106,7 +101,7 @@ class SimpleSlider extends React.Component {
     observer.observe(document.body, {
       childList: true,
       attributes: true,
-      characterData: false,
+      subtree: true,
     });
   }
 
