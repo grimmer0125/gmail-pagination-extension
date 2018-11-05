@@ -156,17 +156,22 @@ class SimpleSlider extends React.Component {
 
     const element = (currentPage > 0 && totalPages > 0) ? (
       <div className="flex-container">
-        <Slider
-          classes={{ container: classes.slider }}
-          min={1}
-          max={totalPages}
-          step={1}
-          value={currentPage}
-          aria-labelledby="label"
-          onChange={this.onSliderChange}
-          onDragEnd={this.onDragEnd}
-        />
-        <Typography style={{ width: '70px' }} id="label">{`${currentPage}/${totalPages}`}</Typography>
+        <div style={{ width: '600px' }}>
+          <Slider
+            classes={{ container: classes.slider }}
+            min={1}
+            max={totalPages}
+            step={1}
+            value={currentPage}
+            aria-labelledby="label"
+            onChange={this.onSliderChange}
+            onDragEnd={this.onDragEnd}
+          />
+        </div>
+        <div style={{ marginLeft: '20px', width: '80px' }}>
+          <Typography id="label">page:</Typography>
+          <Typography id="label">{`${currentPage}/${totalPages}`}</Typography>
+        </div>
       </div>
     ) : <div />;
     return element;
@@ -178,11 +183,11 @@ SimpleSlider.propTypes = {
 const MySlider = withStyles(styles)(SimpleSlider);
 
 const newNode = document.createElement('div');
-// newNode.setAttribute('id', 'root');
+newNode.setAttribute('id', 'root');
 
-newNode.style.backgroundColor = 'yellow';
-newNode.style.height = '45px'; // '60px'; // 32
-newNode.style.width = '620px'; // 662 640 370
+newNode.style.backgroundColor = '#B8E8E7';
+newNode.style.height = '50px'; // '60px'; // 32
+// newNode.style.width = '620px'; // 662 640 370
 
 // const referenceNode = document.querySelector('.Cr.aqJ');
 // referenceNode.before(newNode); // not work since gmail seems to reset DOM often
