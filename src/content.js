@@ -6,6 +6,8 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/lab/Slider';
 
+import './content.css';
+
 console.log('in contentScript');
 console.log('current page url:', window.location.href);
 
@@ -248,7 +250,7 @@ class SimpleSlider extends React.Component {
     const { currentPage, totalPages } = this.state;
     // console.log('value/total in render:', currentPage, totalPages);
     const element = totalPages > 0 ? (
-      <div style={{ display: 'flex' }}>
+      <div className="flex-container">
         <Slider
           classes={{ container: classes.slider }}
           min={1}

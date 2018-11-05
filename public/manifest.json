@@ -22,7 +22,7 @@
    {
      "matches": ["https://mail.google.com/*"],
      "run_at": "document_end",
-     "css": [],
+     "css": ["/static/css/content.css"],
      "js": ["/static/js/content.js"]
    }
   ]
