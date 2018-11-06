@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/lab/Slider';
+// import Button from '@material-ui/core/Button';
 
 import './content.css';
 
@@ -12,14 +13,17 @@ console.log('contentScript starts');
 
 const { chrome } = window;
 
-const styles = {
+const styles = theme => ({
   // root: {
   //   width: 300,
+  // },
+  // button: {
+  //   margin: theme.spacing.unit,
   // },
   slider: {
     padding: '22px 0px', // top, right, down, left
   },
-};
+});
 
 function findCountInfo(node, type) {
   const countInfoSpan = node.querySelectorAll('.Dj');
@@ -172,6 +176,14 @@ class SimpleSlider extends React.Component {
           <Typography id="label">page:</Typography>
           <Typography id="label">{`${currentPage}/${totalPages}`}</Typography>
         </div>
+        {/* <Button
+          variant="outlined"
+          color="secondary"
+          className={classes.button}
+          onClick={() => { console.log('onClick'); }}
+        >
+          Hide
+        </Button> */}
       </div>
     ) : <div />;
     return element;
@@ -182,14 +194,24 @@ SimpleSlider.propTypes = {
 };
 const MySlider = withStyles(styles)(SimpleSlider);
 
-const newNode = document.createElement('div');
-newNode.setAttribute('id', 'root');
 
-newNode.style.backgroundColor = '#B8E8E7';
-newNode.style.height = '50px'; // '60px'; // 32
-// newNode.style.width = '620px'; // 662 640 370
+function addExtensionUI() {
+  const newNode = document.createElement('div');
+  newNode.setAttribute('id', 'root');
+  newNode.style.backgroundColor = '#B8E8E7';
+  newNode.style.height = '50px'; // '60px'; // 32
+  // newNode.style.width = '620px'; // 662 640 370
 
-// const referenceNode = document.querySelector('.Cr.aqJ');
-// referenceNode.before(newNode); // not work since gmail seems to reset DOM often
-document.body.appendChild(newNode);
-ReactDOM.render(<MySlider />, newNode);
+  // const referenceNode = document.querySelector('.Cr.aqJ');
+  // referenceNode.before(newNode); // not work since gmail seems to reset DOM often
+  document.body.appendChild(newNode);
+  ReactDOM.render(<MySlider />, newNode);
+}
+
+chrome.storage.sync.get(['visibility'], (result) => {
+  console.log(`Value currently is ${result.visibility}`);
+
+  if (!result.visibility || result.visibility === 'show') {
+    addExtensionUI();
+  }
+});
