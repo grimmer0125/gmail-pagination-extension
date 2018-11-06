@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/lab/Slider';
-// import Button from '@material-ui/core/Button';
+import Button from '@material-ui/core/Button';
 
 import './content.css';
 
@@ -17,9 +17,9 @@ const styles = theme => ({
   // root: {
   //   width: 300,
   // },
-  // button: {
-  //   margin: theme.spacing.unit,
-  // },
+  button: {
+    margin: theme.spacing.unit,
+  },
   slider: {
     padding: '22px 0px', // top, right, down, left
   },
@@ -67,9 +67,11 @@ class SimpleSlider extends React.Component {
     this.state = {
       currentPage: 0,
       countData: {},
+      usngNewUI: false,
     };
 
     this.threadsPerPage = 0;
+    this.detectedNewUI = false;
   }
 
   componentDidMount() {
@@ -98,8 +100,18 @@ class SimpleSlider extends React.Component {
       let newCountData = null;
       newCountData = findCountInfo(document);
 
+      // newCountData.total also means that UI is fullly loaded
       if (newCountData && newCountData.total) {
         this.setState({ countData: newCountData });
+
+        // check if the current UI is the new version of Gmail using multiple-tab
+        if (!this.detectedNewUI) {
+          this.detectedNewUI = true;
+          const tabTable = document.querySelector('.aKk');
+          if (tabTable) {
+            this.setState({ usngNewUI: true });
+          }
+        }
       }
     }));
     observer.observe(document.body, {
@@ -134,7 +146,20 @@ class SimpleSlider extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { currentPage, countData } = this.state;
+    const { currentPage, countData, usngNewUI } = this.state;
+
+    if (usngNewUI) {
+      return (
+        <div className="flex-container">
+          <div>
+            <Button variant="outlined" color="secondary" className={classes.button}>
+          New Gmail (multiple tab) not supported. Please uncheck some tabs (e.g. social, promotions) in the setting -> configure inbox.
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     const { first, last, total } = countData;
 
     let totalPages = 0;
@@ -176,14 +201,6 @@ class SimpleSlider extends React.Component {
           <Typography id="label">page:</Typography>
           <Typography id="label">{`${currentPage}/${totalPages}`}</Typography>
         </div>
-        {/* <Button
-          variant="outlined"
-          color="secondary"
-          className={classes.button}
-          onClick={() => { console.log('onClick'); }}
-        >
-          Hide
-        </Button> */}
       </div>
     ) : <div />;
     return element;
