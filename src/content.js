@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/lab/Slider';
-import Button from '@material-ui/core/Button';
+// import Button from '@material-ui/core/Button';
 
 import './content.css';
 
@@ -58,65 +58,95 @@ function findCountInfo(node) {
   }
 }
 
-function fetchLabelPart(str) {
-  let r = null;
 
-  r = str.match(/.*\/#category\/(.*)\//);
-  if (r) {
-    // https://mail.google.com/mail/u/0/#category/promotions/p2
-    console.log('label type6 (#category/promotions/p2):', r[1]);
-    return r[1];
-  }
-  r = str.match(/.*\/#category\/(.*)/);
-  if (r) {
-    console.log('label type5 (#category/promotions):', r[1]);
-    return r[1];
-  }
+function parsePatternURL(url, pattern, result) {
+  //   const regex = new RegExp(`.*\/#${pattern}\/(.*)\/p`);
+  //   const regex2 = new RegExp(`.*\/#${pattern}\/(.*)`);
 
-  r = str.match(/.*\/#(.*)\//);
-  if (!r) {
-    // #inbox type
-    r = str.match(/.*\/#(.*)/);
-    // console.log('label type1(#inbox):', r[1]);
+  const regex = new RegExp(`.*\/#${pattern}\/p`);
+  const regex2 = new RegExp(`.*\/#${pattern}`);
+
+  let matchArr;
+
+  let page = null;
+  let preparedURL = null;
+  let type = null;
+
+  matchArr = url.match(regex);
+
+  if (matchArr) {
+    // found with page number
+    preparedURL = matchArr[0];
+    type = matchArr[1];
+    page = parseInt(url.replace(preparedURL, ''), 10);
   } else {
-    //   console.log('debug1:', r[1]); e.g. search, inbox/p1, label/apple
-    if (r[1].indexOf('label') > -1) {
-      r = str.match(/.*\/#label\/(.*)\//);
-      if (!r) {
-        // #label/104-32'
-        r = str.match(/.*\/#label\/(.*)/);
-        // console.log('label type3:', r[1]);
-      } else {
-        // #label/104-32/p1
-        // console.log('label type4:', r[1]);
-      }
-    } else {
-      // console.log('label type2(#search or inbox/p*):', r[1]);
+    // pageStr = url.replace(/.*\/#search\/(.*)/, '');
+    matchArr = url.match(regex2);
+
+    if (matchArr) {
+      // found w/o page number, should page1
+      preparedURL = `${matchArr[0]}/p`;
+      type = matchArr[1];
+      page = 1;
     }
   }
 
-  if (r && r[1]) {
-    return r[1];
+  result.preparedURL = preparedURL;
+  result.type = type;
+  result.page = page;
+
+  if (result.page) {
+    return true;
   }
 
-  return null;
+  return false;
 }
+
+
+function fetchInfoFromURL(url) {
+  const parseResult = {};
+
+  if (parsePatternURL(url, '(search\/.*)', parseResult)) {
+    console.log('match search');
+  } else if (parsePatternURL(url, '(advanced-search\/.*)', parseResult)) {
+    console.log('match advanced-search');
+  } else if (parsePatternURL(url, '(category\/.*)', parseResult)) {
+    console.log('match category');
+  } else if (parsePatternURL(url, '(label\/.*)', parseResult)) {
+    console.log('match label');
+  } else if (parsePatternURL(url, '(.*)', parseResult)) {
+    console.log('match generic');
+  } else {
+    console.log('parse fail !!!');
+  }
+
+  return parseResult;
+}
+
+const SEARCH = 'search';
+const ADVANCED_SEARCH = 'advanced-search';
 
 class SimpleSlider extends React.Component {
   constructor(props) {
     super(props);
     // Don't call this.setState() here!
     this.state = {
-      currentPage: 0,
+      currentPage: 1,
       countData: {},
       usngNewUI: false,
     };
 
     this.threadsPerPage = 0;
     this.detectedNewUI = false;
-    this.label = null;
-  }
+    this.type = ''; // In fact, it could be label/category/sent
+    this.preparedURL = null;
+    this.possibleSearchTotal = 0;
 
+    this.search = {
+      triedValidMax: 0,
+      triedInvalidMin: 0,
+    };
+  }
 
   componentDidMount() {
     // url part
@@ -124,46 +154,30 @@ class SimpleSlider extends React.Component {
       if (request.message === 'tab_update_completed') {
         const url = window.location.href;
 
-        const label = fetchLabelPart(url);
-        if (label) {
-          if (this.label !== label) {
-            console.log('reset total, new label:', label);
-            this.label = label;
+        const result = fetchInfoFromURL(url);
+        const { type, page, preparedURL } = result;
+        if (type) {
+          if (this.type !== type) {
+            console.log('reset total, new type:', type);
+            this.type = type;
+            this.search = {
+              triedValidMax: 0,
+              triedInvalidMin: 0,
+            };
             // reset total
             this.setState({
               countData: {},
             });
           }
-        } else {
-          console.log('can not find out label from url');
-        }
 
-        // if (isNaN(currentPage)) {
-        //   const pageStr = url.replace(/.*\/#(?!search).*\/p/g, '');
-        //   currentPage = parseInt(pageStr, 10);
-        // }
+          this.preparedURL = preparedURL;
 
-        // TODO:
-        // 1 x works: https://mail.google.com/mail/u/0/#category/promotions/p2, https://mail.google.com/mail/u/0/#category/social/p2
-        // 2 x https://mail.google.com/mail/u/0/#category/promotions //NaN, https://mail.google.com/mail/u/0/#category/social
-        // 3 search/advanced-search case, e.g.
-        // https://mail.google.com/mail/u/0/#advanced-search/subset=all&has=apple&hasnot=pay&within=1d&sizeoperator=s_sl&sizeunit=s_smb&query=apple
-        const pageStr = url.replace(/.*\/#(?!search).*\/p/g, '');
-        let currentPage;
-        if (pageStr !== url) {
-          currentPage = parseInt(pageStr, 10);
-          if (isNaN(currentPage)) {
-            currentPage = 1; // https://mail.google.com/mail/u/0/#category/promotions
-          }
-          console.log('set currentpage from url:', currentPage);
-        } else if (url.match(/.*\/#search.*\//g) || url.match(/.*\/#advanced-search.*\//g)) {
-          currentPage = 0; // search type, ignore to handle on UI
+          this.setState({
+            currentPage: page,
+          });
         } else {
-          currentPage = 1; // it might be no email
+          console.log('can not find out type from url');
         }
-        this.setState({
-          currentPage,
-        });
       }
     });
 
@@ -173,7 +187,9 @@ class SimpleSlider extends React.Component {
       newCountData = findCountInfo(document);
 
       // newCountData.total also means that UI is fullly loaded
-      if (newCountData && newCountData.total) {
+      if (newCountData && newCountData.first) { // may happen first:1, total:NaN (since the word is "many?")
+        // console.log('newCountData:', newCountData); // total:Nan will not hit
+
         this.setState({ countData: newCountData });
 
         // check if the current UI is the new version of Gmail using multiple-tab
@@ -199,39 +215,11 @@ class SimpleSlider extends React.Component {
     setTimeout(() => {
       const { currentPage } = this.state;
       console.log('get delay drag end page:', currentPage);
-      const url = window.location.href;
-      const match = url.match(/.*\/#.*\/p/g);
-      let newUrl;
-      if (match) {
+      // const match = url.match(/.*\/#.*\/p/g);
+      // if (match) {
+      //   const matchCatelog = url.match(/.*\/#category\/promotions/g);
 
-        const matchCatelog = url.match(/.*\/#category\/promotions/g);
-
-        if (matchCatelog) {
-          // #category\/promotions or #category\/promotions/p3
-          const match2 = url.match(/.*\/#category\/promotions\/p/g);
-          if (match2) {
-            newUrl = match2[0] + currentPage;
-          } else {
-            newUrl = `${url}/p${currentPage}`;
-          }
-        } else {
-          // handle some label starts from p, e.g. #label/p*
-          const matchLabel = url.match(/.*\/#label\/p.*/g);
-
-          if (matchLabel) {
-            const match3 = url.match(/.*\/#label\/p.*\/p/g);
-            if (match3) {
-              newUrl = match3[0] + currentPage;
-            } else {
-              newUrl = `${url}/p${currentPage}`;
-            }
-          } else {
-            newUrl = match[0] + currentPage;
-          }
-        }
-      } else {
-        newUrl = `${url}/p${currentPage}`;
-      }
+      const newUrl = `${this.preparedURL}${currentPage}`;
       // or window.location.href
       window.location.replace(newUrl);
     }, 0);
@@ -240,7 +228,6 @@ class SimpleSlider extends React.Component {
   onSliderChange = (event, value) => {
     this.setState({ currentPage: value });
   };
-
 
   render() {
     const { classes } = this.props;
@@ -255,30 +242,79 @@ class SimpleSlider extends React.Component {
       );
     }
 
+    // TODO:
+    // 1 x works: https://mail.google.com/mail/u/0/#category/promotions/p2, https://mail.google.com/mail/u/0/#category/social/p2
+    // 2 x https://mail.google.com/mail/u/0/#category/promotions //NaN, https://mail.google.com/mail/u/0/#category/social
+    // 3 search/advanced-search case, e.g.
+    // https://mail.google.com/mail/u/0/#advanced-search/subset=all&has=apple&hasnot=pay&within=1d&sizeoperator=s_sl&sizeunit=s_smb&query=apple
+
     const { first, last, total } = countData;
 
-    let totalPages = 0;
+    let totalPages = 1; // default, even no email
     if (total) {
+      // searching mode may do not have valid total
       if (currentPage > 1) {
         if (this.threadsPerPage === 0) {
-          if (first !== 1) {
-            this.threadsPerPage = (first - 1) / (currentPage - 1);
-          }
+          this.threadsPerPage = (first - 1) / (currentPage - 1);
         }
-      } else if (total === last) {
+        totalPages = Math.ceil(total / this.threadsPerPage);
+      } else if (total !== last) {
+        // in page1, total pages > 1
+        if (this.threadsPerPage === 0) {
+          this.threadsPerPage = last - first + 1;
+        }
+
+        totalPages = Math.ceil(total / this.threadsPerPage);
+      } else {
         // in page1, total pages: 1
-        totalPages = 1;
-      } else if (this.threadsPerPage === 0) {
-        // in page1, total pages >1
-        this.threadsPerPage = last - first + 1;
+        // totalPages = 1;
       }
 
-      if (totalPages === 0) {
-        totalPages = Math.ceil(total / this.threadsPerPage);
+      // TODO: how to get triedInvalidMin?
+      if (last === total) {
+        this.search = {
+          triedValidMax: totalPages,
+          triedInvalidMin: totalPages + 1,
+        };
       }
     }
 
-    const element = (currentPage > 0 && totalPages > 0) ? (
+    let searchMode = false;
+    if (this.type.indexOf(SEARCH) > -1 || this.type.indexOf(ADVANCED_SEARCH) > -1) {
+      // serach UI which can not know total pages at the beginning
+      searchMode = true;
+
+      // totalPages 可能是算出來的 or 0 (nan)
+      totalPages = totalPages >= currentPage ? totalPages : currentPage;
+      totalPages = this.search.triedValidMax >= totalPages ? this.search.triedValidMax : totalPages;
+      this.search.triedValidMax = totalPages;
+
+
+      // element = (
+      //   <div className="flex-container">
+      //     <div style={{ width: '600px' }}>
+      //       <Slider
+      //         classes={{ container: classes.slider }}
+      //         min={1}
+      //         max={totalPages}
+      //         step={1}
+      //         value={currentPage}
+      //         aria-labelledby="label"
+      //         onChange={this.onSliderChange}
+      //         onDragEnd={this.onDragEnd}
+      //       />
+      //     </div>
+      //     <div style={{ marginLeft: '20px', width: '80px' }}>
+      //       <Typography id="label">page:</Typography>
+      //       <Typography id="label">{`${currentPage}/${totalPages}`}</Typography>
+      //     </div>
+      //   </div>
+      // );
+
+      // return element;
+    }
+
+    const element = (
       <div className="flex-container">
         <div style={{ width: '600px' }}>
           <Slider
@@ -296,8 +332,16 @@ class SimpleSlider extends React.Component {
           <Typography id="label">page:</Typography>
           <Typography id="label">{`${currentPage}/${totalPages}`}</Typography>
         </div>
+        <div>
+          {searchMode ? (
+            <div>
+              {'searching.'}
+              {this.search.triedValidMax + 1 === this.search.triedInvalidMin ? 'final' : null}
+            </div>
+          ) : null}
+        </div>
       </div>
-    ) : <div />;
+    );
     return element;
   }
 }
