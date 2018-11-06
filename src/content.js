@@ -84,7 +84,7 @@ class SimpleSlider extends React.Component {
         if (pageStr !== url) {
           currentPage = parseInt(pageStr, 10);
           console.log('set currentpage from url:', currentPage);
-        } else if (url.match(/.*\/#search.*\//g)) {
+        } else if (url.match(/.*\/#search.*\//g) || url.match(/.*\/#advanced-search.*\//g)) {
           currentPage = 0;
         } else {
           currentPage = 1; // it might be no email
