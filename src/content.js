@@ -435,8 +435,12 @@ class SimpleSlider extends React.Component {
         <div>
           {searchMode ? (
             <div>
-              {'searching.'}
-              {this.search.reachMax ? 'final' : `triedInvalidMin:${this.search.triedInvalidMin}`}
+              <div>
+                {this.search.reachMax ? 'Got final page' : 'Not got final page'}
+              </div>
+              <div>
+                {!this.search.reachMax ? `min.OfTriedInvalid:${this.search.triedInvalidMin}` : null}
+              </div>
             </div>
           ) : null}
         </div>
