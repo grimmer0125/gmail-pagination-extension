@@ -34,7 +34,6 @@ function findCountInfo(node) {
   const countInfoSpan = node.querySelectorAll('.Dj');
   if (countInfoSpan) {
     if (countInfoSpan.length >= 1) {
-      // console.log('countInfoSpan.length:', countInfoSpan.length);
     } else {
       return;
     }
@@ -67,9 +66,6 @@ function findCountInfo(node) {
 
 
 function parsePatternURL(url, pattern, result) {
-  //   const regex = new RegExp(`.*\/#${pattern}\/(.*)\/p`);
-  //   const regex2 = new RegExp(`.*\/#${pattern}\/(.*)`);
-
   const regex = new RegExp(`.*\/#${pattern}\/p`);
   const regex2 = new RegExp(`.*\/#${pattern}`);
 
@@ -87,7 +83,6 @@ function parsePatternURL(url, pattern, result) {
     type = matchArr[1];
     page = parseInt(url.replace(preparedURL, ''), 10);
   } else {
-    // pageStr = url.replace(/.*\/#search\/(.*)/, '');
     matchArr = url.match(regex2);
 
     if (matchArr) {
@@ -147,7 +142,7 @@ class SimpleSlider extends React.Component {
 
     // TODO: using state instead of using this
     this.detectedNewUI = false;
-    this.type = ''; // In fact, it could be label/category/sent
+    this.type = ''; // it refers label/category/sent etc
     this.preparedURL = null;
     this.pageURL = 1;
     // TODO: not calculate threadsPerPage this in render
@@ -172,10 +167,8 @@ class SimpleSlider extends React.Component {
         if (type) {
           this.preparedURL = preparedURL;
           this.pageURL = page;
-          // console.log('reset total, new type2:', type, this.pageURL);
 
           if (this.type !== type) {
-            // console.log('reset total, new type:', type, page);
             this.type = type;
             this.search = {
               preTriedValidMax: 0,
@@ -190,22 +183,12 @@ class SimpleSlider extends React.Component {
               pageInput: page.toString(),
             });
           } else {
+            // this may trigger synchronized render()
             this.setState({
               currentPage: page,
               pageInput: page.toString(),
             });
           }
-
-          // NOTE: chrome.runtime.onMessage.addListener裡, 表示上面跟下面中間會夾雜個 setState 引起的 render
-          // !!!!!!!!!!! 所以改成新版的了, setstate最後統一做
-          // reset total, new type: search/apple 1  !!!
-          // content.js? [sm]:269 render-start:this.pageURL, 1148
-          // content.js? [sm]:297 render-total:1 default
-          // content.js? [sm]:396 total-5: 1148
-          // content.js? [sm]:183 reset total, new type2: search/apple 1   !!!!
-          // content.js? [sm]:269 render-start:this.pageURL, 1
-          // content.js? [sm]:297 render-total:1 default
-          // content.js? [sm]:396
         } else {
           console.log('can not find out type from url');
         }
@@ -218,7 +201,7 @@ class SimpleSlider extends React.Component {
       newCountData = findCountInfo(document);
 
       // This line means that UI is fullly loaded and we can try to detect if it is new UI or not
-      if (newCountData) { // may happen first:1, total:NaN (since the word is "many?")
+      if (newCountData) { // may happen first:1, total:NaN (since the word is "many/about")
         // console.log('newCountData:', newCountData); // total:Nan will not hit
 
         // check if the current UI is the new version of Gmail using multiple-tab
@@ -229,8 +212,6 @@ class SimpleSlider extends React.Component {
             this.setState({ usngNewUI: true });
           }
         }
-
-        // this.setState({ countData: newCountData });
       }
 
       const tableContainer = document.querySelectorAll('.Cp');
@@ -242,19 +223,6 @@ class SimpleSlider extends React.Component {
             break;
           }
         }
-        // if (emptyPanel) {
-        // console.log('emptyPanel !!');
-        // }
-        // this.setState({ emptyPanel });
-
-        // if (heightNonZero) {
-        // console.log('all container vanish');
-        // }
-        // console.log('cp:', tableContainer.offsetHeight);
-        // console.log('cp2:', tableContainer.clientHeight);
-
-        // const tableContainer2 = document.querySelectorAll('.Cp');
-        // console.log(tableContainer2, tableContainer2.length);
       }
 
       if (newCountData && tableContainer) {
@@ -273,15 +241,8 @@ class SimpleSlider extends React.Component {
   }
 
   onDragEnd = (event) => {
-    // console.log('slider onDragEnd', event);
-
     setTimeout(() => {
       const { currentPage } = this.state;
-      // this.currentPage = this.state.currentPage2;
-      // console.log('get delay drag end page:', currentPage);
-      // const match = url.match(/.*\/#.*\/p/g);
-      // if (match) {
-      //   const matchCatelog = url.match(/.*\/#category\/promotions/g);
 
       if (currentPage > 0) {
         const newUrl = `${this.preparedURL}${currentPage}`;
@@ -301,7 +262,6 @@ class SimpleSlider extends React.Component {
   }
 
   onSliderChange = (event, value) => {
-    // this.currentPage = value;
     this.setState({ currentPage: value, pageInput: value.toString() });
   };
 
@@ -312,15 +272,13 @@ class SimpleSlider extends React.Component {
   }
 
   render() {
-    // console.log('render-start:this.pageURL,', this.pageURL);
     const { classes } = this.props;
     const {
-      countData, usngNewUI, emptyPanel,
+      pageInput, countData, usngNewUI, emptyPanel,
     } = this.state;
 
     const currentPage = this.pageURL;
 
-    // console.log('emptyPanel in render:', emptyPanel);
     if (usngNewUI) {
       return (
         <div className="flex-container">
@@ -331,48 +289,37 @@ class SimpleSlider extends React.Component {
       );
     }
 
-    // TODO:
-    // 1 x works: https://mail.google.com/mail/u/0/#category/promotions/p2, https://mail.google.com/mail/u/0/#category/social/p2
-    // 2 x https://mail.google.com/mail/u/0/#category/promotions //NaN, https://mail.google.com/mail/u/0/#category/social
-    // 3 x search/advanced-search case, e.g.
-    // https://mail.google.com/mail/u/0/#advanced-search/subset=all&has=apple&hasnot=pay&within=1d&sizeoperator=s_sl&sizeunit=s_smb&query=apple
-
     const { first, last, total } = countData;
 
-    let totalPages = 1; // default, even no email
-    // console.log('render-total:1 default');
+    // default, even no email
+    let totalPages = 1;
+    // searching mode may do not have valid total
     if (total) {
-      // searching mode may do not have valid total
       if (currentPage > 1) {
         if (this.threadsPerPage === 0 && first) {
           let tmpThreadsPerPage = (first - 1) / (currentPage - 1);
           if (Number.isInteger(tmpThreadsPerPage) && tmpThreadsPerPage > 0) {
             this.threadsPerPage = tmpThreadsPerPage;
           } else {
-            // x TODO: 有時 last/total 變得比 currentpage 快 !!!! 如果是直接開p8頁, 這裡就會有問題,
-            // (176-1)/(8-1), 但開p8, 時, 卻暫時出現p7
-            // way1: currentpage 慢出現, 手動加 1. way2: 現在也直接使用this.pageURL, 可能快點變化比較不需要 way1 (還是會發生)
-            // 代表 MutationObserver 有時比 chrome.runtime.onMessage.addListener 快 !!!
+            // NOTE: the changes of last/totalo and currentpage may not be synchronized
+            // case1: first/last occur first
             tmpThreadsPerPage = (first - 1) / (currentPage);
             console.log('workaround to calculate  this.threadsPerPage:', tmpThreadsPerPage, first, currentPage);
 
             if (Number.isInteger(tmpThreadsPerPage) && tmpThreadsPerPage > 0) {
               this.threadsPerPage = tmpThreadsPerPage;
             } else {
+              // NOTE: if change of currentpage occur first ? (case2)
               console.log('can not get threadsPerPage');
-              // *TODO: (151-1) / (8-1)?  如果是 currentpage 先出現? 要手動-1? 先做下面的 disable the slider 好了
             }
           }
         }
 
-        // search mode 時, 這個值只是估計
         if (this.threadsPerPage > 0) {
           totalPages = Math.ceil(total / this.threadsPerPage);
-          // console.log('total-2:', totalPages, this.threadsPerPage);
         } else {
+          // TODO: disable the slider, not enough data?
           console.log('no this.threadsPerPage data to calculate totalpages (total/this.threadsPerPage)');
-          // TODO:
-          // disable the slider, not enough data
         }
       } else if (total !== last) {
         // in page1, total pages > 1
@@ -381,10 +328,8 @@ class SimpleSlider extends React.Component {
         }
 
         totalPages = Math.ceil(total / this.threadsPerPage);
-        // console.log('total-3:', totalPages);
       } else {
         // in page1, total pages: 1
-        // totalPages = 1;
       }
     }
 
@@ -392,47 +337,36 @@ class SimpleSlider extends React.Component {
 
     let searchMode = false;
     if (this.type.indexOf(SEARCH) > -1 || this.type.indexOf(ADVANCED_SEARCH) > -1) {
-      // serach UI which can not know total pages at the beginning
+      // serach UI can not know total pages at the beginning
       searchMode = true;
 
-      // x TODO: 到了後之後就不能再改了 this. 或是不要用下面的 再用新的 variable
       if (!this.search.reachMax && last && last === total) {
-        // console.log('reach !!!!', totalPages); // 有時 last/total 變得比 currentpage 快 !!!!
         this.search.reachMax = true;
-        this.search.triedValidMax = totalPages; // 1.  每次都改. 2. 選較大的. 3. 選currentPage
-        //   triedValidMax: totalPages,
-        //   // triedInvalidMin: totalPages + 1,
-        // };
+        this.search.triedValidMax = totalPages;
       }
 
       if (!this.search.reachMax) {
         if (emptyPanel) {
-        // console.log('empty redner, search');
           if (this.search.triedInvalidMin === 0) {
             this.search.triedInvalidMin = currentPage;
-          // console.log('set this.search.triedInvalidMin:', currentPage);
-          } else if (currentPage > this.search.triedValidMax && currentPage < this.search.triedInvalidMin) { // 因為會先變 url, 所以 回到4th page, 此時還是 emptypanel
+          } else if (currentPage > this.search.triedValidMax && currentPage < this.search.triedInvalidMin) {
             this.search.preTriedInvalidMin = this.search.triedInvalidMin;
             this.search.triedInvalidMin = currentPage;
-            // console.log('set this.search.triedInvalidMin2:', currentPage);
           }
 
-          // 突然間拖到很大的out of range, 因為 url 會先變, 然後才變 empty, 所以一定有瞬間會先以為有panel, 然後再進來這邊
-          // totalPages 可能是算出來的 or 0 (nan)
           if (this.search.triedValidMax === currentPage) {
-            console.log('recover max:', this.search.preTriedValidMax); // 8 ? why
+            // p1 -> p1000 (empty, out of range)
+            // it will happen 1. the code hit emptyPanel=false (url changes first, so the email keep old status)
+            // 2. then it will hit here later
+            console.log('recover max:', this.search.preTriedValidMax);
             totalPages = this.search.preTriedValidMax;
-            // console.log('total-4:', totalPages);
-            // *TODO: currentpage 改成第0頁, 也還是可以拖回去, 所以也先放棄好了
-            // shownCurrentPage = 0;  ???????
             this.search.triedValidMax = this.search.preTriedValidMax;
           }
         } else {
-          // console.log('not empty redner, search');
-
-          // 直接接 p8, p9就是max, 因為上面 console.log('reach !!!!');, 所以這邊會進來 min !!!
-          if (!this.search.reachMax && this.search.triedInvalidMin === currentPage) {
-            // p1 -> p1000 (無) -> p100 瞬間會無 但可能是有的
+          if (this.search.triedInvalidMin === currentPage) {
+            // p1 -> p1000 (empty) -> p100:
+            // 1. hit emptyPanel (<- wrong intermediate status)
+            // 2. but p100 is possible to have emails, it will hit if it happen
             console.log('recover min:', this.search.preTriedInvalidMin);
             this.search.triedInvalidMin = this.search.preTriedInvalidMin;
           }
@@ -440,18 +374,11 @@ class SimpleSlider extends React.Component {
           if (this.search.triedInvalidMin === 0 || currentPage < this.search.triedInvalidMin) {
             totalPages = totalPages >= currentPage ? totalPages : currentPage;
 
-            // done FIXME:
-            // 先到 https://mail.google.com/mail/u/0/#inbox/p1301
-            // 再搜尋 apple ?
-            // 已經 url 是 search, 但 currentPage 還是舊的1301!!
-            // console.log('total-5:', totalPages);
-
             if (!this.search.reachMax && totalPages > this.search.triedValidMax) {
               this.search.preTriedValidMax = this.search.triedValidMax;
               this.search.triedValidMax = totalPages;
             } else {
               totalPages = this.search.triedValidMax;
-              // console.log('total-6:', totalPages);
             }
           }
         }
@@ -459,14 +386,8 @@ class SimpleSlider extends React.Component {
 
       if (this.search.reachMax) {
         totalPages = this.search.triedValidMax;
-        // console.log('total-7:', totalPages);
       }
     }
-
-
-    // currentPage is this.pageURL ??????????? 還是可以拖, 先放棄好了
-    // *TODO: grey out to disable, e.g. 244/1, 應該要是 k/triedValidMax, only search mode would happen
-    // shownCurrentPage = currentPage <= totalPages ? currentPage : 0;
 
     const element = (
       <div className="flex-container">
@@ -491,14 +412,13 @@ class SimpleSlider extends React.Component {
             id="standard-number"
             label="Input"
             className={classes.textField}
-            value={this.state.pageInput}
+            value={pageInput}
             InputLabelProps={{
               shrink: true,
             }}
             onChange={this.onInputPage}
             onKeyPress={(ev) => {
               if (ev.key === 'Enter') {
-                // Do code here
                 ev.preventDefault();
                 this.onJumpClick();
               }
