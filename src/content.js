@@ -283,7 +283,7 @@ class SimpleSlider extends React.Component {
       return (
         <div className="flex-container">
           <div style={{ color: 'red' }}>
-          New Gmail default UI (Catagories on tabs) does not support pagination. Please uncheck some tabs (e.g. social, promotions) in the setting -> configure inbox. You can still access catagories in the left menu.
+          New Gmail default UI (Categories on tabs) does not support pagination. Please uncheck some tabs (e.g. social, promotions) in the setting -> configure inbox. You can still access categories in the left menu.
           </div>
         </div>
       );
