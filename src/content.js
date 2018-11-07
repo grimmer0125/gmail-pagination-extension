@@ -5,7 +5,8 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Slider from '@material-ui/lab/Slider';
-// import Button from '@material-ui/core/Button';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 
 import './content.css';
 
@@ -15,6 +16,11 @@ const styles = theme => ({
   // root: {
   //   width: 300,
   // },
+  textField: {
+    marginLeft: theme.spacing.unit,
+    marginRight: theme.spacing.unit,
+    width: 60,
+  },
   button: {
     margin: theme.spacing.unit,
   },
@@ -136,6 +142,7 @@ class SimpleSlider extends React.Component {
       countData: {},
       usngNewUI: false,
       emptyPanel: true,
+      pageInput: '',
     };
 
     // TODO: using state instead of using this
@@ -180,10 +187,12 @@ class SimpleSlider extends React.Component {
             this.setState({
               countData: {}, // reset total
               currentPage: page,
+              pageInput: page.toString(),
             });
           } else {
             this.setState({
               currentPage: page,
+              pageInput: page.toString(),
             });
           }
 
@@ -282,10 +291,25 @@ class SimpleSlider extends React.Component {
     }, 0);
   }
 
+  onJumpClick = () => {
+    const { pageInput } = this.state;
+
+    if (pageInput > 0) {
+      const newUrl = `${this.preparedURL}${pageInput}`;
+      window.location.replace(newUrl);
+    }
+  }
+
   onSliderChange = (event, value) => {
     // this.currentPage = value;
-    this.setState({ currentPage: value });
+    this.setState({ currentPage: value, pageInput: value.toString() });
   };
+
+  onInputPage = (event) => {
+    this.setState({
+      pageInput: event.target.value,
+    });
+  }
 
   render() {
     // console.log('render-start:this.pageURL,', this.pageURL);
@@ -363,7 +387,6 @@ class SimpleSlider extends React.Component {
         // totalPages = 1;
       }
     }
-
 
     const shownCurrentPage = this.state.currentPage;
 
@@ -464,6 +487,32 @@ class SimpleSlider extends React.Component {
           <Typography id="label">{`${shownCurrentPage}/${totalPages}`}</Typography>
         </div>
         <div>
+          <TextField
+            id="standard-number"
+            label="Input"
+            className={classes.textField}
+            value={this.state.pageInput}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            onChange={this.onInputPage}
+            onKeyPress={(ev) => {
+              if (ev.key === 'Enter') {
+                // Do code here
+                ev.preventDefault();
+                this.onJumpClick();
+              }
+            }}
+            type="number"
+            margin="normal"
+          />
+        </div>
+        <div>
+          <Button variant="outlined" color="secondary" className={classes.button} onClick={this.onJumpClick}>
+            Jump
+          </Button>
+        </div>
+        <div>
           {searchMode ? (
             <div>
               {'searching.'}
@@ -471,8 +520,7 @@ class SimpleSlider extends React.Component {
             </div>
           ) : null}
         </div>
-      </div>
-    );
+      </div>);
     return element;
   }
 }
