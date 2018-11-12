@@ -8,7 +8,42 @@ import Slider from '@material-ui/lab/Slider';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
+import numeral from 'numeral';
+import 'numeral/locales';
+
 import './content.css';
+
+function convertStrToNum(str) {
+  let lang = document.documentElement.lang;
+  // console.log('current:', lang);
+  let num = '';
+  if (lang === 'zh-CN' || lang === 'zh-TW' || lang === 'zh-HK' || lang === 'en' || lang === 'ms') {
+    lang = 'chs';
+  } else if (lang === 'da') {
+    lang = 'da-dk';
+  } else if (lang === 'uk') {
+    lang = 'uk-ua';
+  } else if (lang === 'ro' || lang === 'id') {
+    // Romanian, Indonesian
+    lang = 'it'; // e.g. 36.660
+  } else if (lang === 'sv' || lang === 'af') {
+    // Swedish, Afrikaans
+    lang = 'fr'; // e.g. 36 660
+  } else {
+    lang = lang.toLocaleLowerCase();
+  }
+
+  numeral.locale(lang);
+
+  try {
+    const myNumeral = numeral(str); // '3.000 is 3000 in it'
+    num = myNumeral.value();
+  } catch (e) {
+    console.log('not support lang/locale');
+  }
+
+  return num;
+}
 
 const { chrome } = window;
 
@@ -54,11 +89,11 @@ function findCountInfo(node) {
         return;
       }
 
-      const first = parseInt(countInfos[0].innerHTML.replace(/,/g, ''), 10);
-      const last = parseInt(countInfos[1].innerHTML.replace(/,/g, ''), 10);
-      const total = parseInt(countInfos[2].innerHTML.replace(/,/g, ''), 10);
+      const first = convertStrToNum(countInfos[0].innerHTML);
+      const last = convertStrToNum(countInfos[1].innerHTML);
+      const total = convertStrToNum(countInfos[2].innerHTML);
 
-      // console.log('first/last/total in monitor:', first, last, total);
+      // console.log('first/last/total in monitor:', first, last, total)
       return { first, last, total };
     }
   }
