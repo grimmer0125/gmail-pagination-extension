@@ -100,3 +100,5 @@ If you want to use compiled css (e.g. `import './content.css';` in `content.js`)
 ## Acknowledgement
 
 The slider part of the icon is made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com/) is licensed by [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/)
+
+The email part of the icon is from https://iconmonstr.com/?s2member_file_download_key=f8dba490cb0d42b3e07309f0fcc38735&s2member_file_download=2012/svg/iconmonstr-email-2.svg
