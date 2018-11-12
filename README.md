@@ -97,4 +97,6 @@ If you want to use compiled css (e.g. `import './content.css';` in `content.js`)
     new MiniCssExtractPlugin({
         filename: 'static/css/[name].css', // 'static/css/[name].[contenthash:8].css'
     ```
+## Acknowledgement
 
+The slider part of the icon is made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com/) is licensed by [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/)
