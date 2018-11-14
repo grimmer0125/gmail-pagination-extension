@@ -13,26 +13,8 @@ import 'numeral/locales';
 
 import './content.css';
 
-function convertStrToNum(str) {
-  let lang = document.documentElement.lang;
-  // console.log('current:', lang);
+function convertStrToNum(str, lang) {
   let num = '';
-  if (lang === 'zh-CN' || lang === 'zh-TW' || lang === 'zh-HK' || lang === 'en' || lang === 'ms') {
-    lang = 'chs';
-  } else if (lang === 'da') {
-    lang = 'da-dk';
-  } else if (lang === 'uk') {
-    lang = 'uk-ua';
-  } else if (lang === 'ro' || lang === 'id') {
-    // Romanian, Indonesian
-    lang = 'it'; // e.g. 36.660
-  } else if (lang === 'sv' || lang === 'af') {
-    // Swedish, Afrikaans
-    lang = 'fr'; // e.g. 36 660
-  } else {
-    lang = lang.toLocaleLowerCase();
-  }
-
   numeral.locale(lang);
 
   try {
@@ -43,6 +25,53 @@ function convertStrToNum(str) {
   }
 
   return num;
+}
+
+function convertCountSpanToNum(countInfoSpans) {
+  const countInfo = { first: '', last: '', total: '' };
+
+  // 0: normal: 1-25 36,000
+  // 1: 1-25 з 36 600, e.g. uk-ua
+  // 2: 36,600 1-25 e.g. hi, ko
+  let localeMode = 0; // not refer to the number itself, number itself is distinguished by lang
+
+  let lang = document.documentElement.lang;
+  // console.log('current:', lang);
+  // ms: Malay
+  if (lang === 'zh-CN' || lang === 'zh-TW' || lang === 'zh-HK' || lang === 'en' || lang === 'ms' || lang === 'es-419') {
+    // 36,000
+    lang = 'chs';
+  } else if (lang === 'da') {
+    // Danmark: 36.660
+    lang = 'da-dk'; // 1-25 af 36.660
+  } else if (lang === 'uk') {
+    // Ukrainian
+    // з: 1-25 з 36 600
+    lang = 'uk-ua';
+  } else if (lang === 'ro' || lang === 'id') {
+    // Romanian, Indonesian
+    lang = 'it'; // e.g. 36.660
+  } else if (lang === 'sv' || lang === 'af') {
+    // Swedish, Afrikaans
+    lang = 'fr'; // e.g. 36 660
+  } else if (lang === 'hi' || lang === 'ko') {
+    localeMode = 2;
+    lang = 'chs';
+  } else {
+    lang = lang.toLocaleLowerCase();
+  }
+
+  if (localeMode === 2) {
+    countInfo.total = convertStrToNum(countInfoSpans[0].innerHTML, lang);
+    countInfo.first = convertStrToNum(countInfoSpans[1].innerHTML, lang);
+    countInfo.last = convertStrToNum(countInfoSpans[2].innerHTML, lang);
+  } else {
+    countInfo.first = convertStrToNum(countInfoSpans[0].innerHTML, lang);
+    countInfo.last = convertStrToNum(countInfoSpans[1].innerHTML, lang);
+    countInfo.total = convertStrToNum(countInfoSpans[2].innerHTML, lang);
+  }
+
+  return countInfo;
 }
 
 const { chrome } = window;
@@ -89,12 +118,9 @@ function findCountInfo(node) {
         return;
       }
 
-      const first = convertStrToNum(countInfos[0].innerHTML);
-      const last = convertStrToNum(countInfos[1].innerHTML);
-      const total = convertStrToNum(countInfos[2].innerHTML);
-
+      const countInfo = convertCountSpanToNum(countInfos);
       // console.log('first/last/total in monitor:', first, last, total)
-      return { first, last, total };
+      return countInfo; // { first, last, total };
     }
   }
 }
