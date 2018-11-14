@@ -21,7 +21,7 @@ function convertStrToNum(str, lang) {
     const myNumeral = numeral(str); // '3.000 is 3000 in it'
     num = myNumeral.value();
   } catch (e) {
-    console.log('not support lang/locale');
+    // console.log('not support lang/locale');
   }
 
   return num;
@@ -48,11 +48,11 @@ function convertCountSpanToNum(countInfoSpans) {
     // Ukrainian
     // з: 1-25 з 36 600
     lang = 'uk-ua';
-  } else if (lang === 'ro' || lang === 'id') {
-    // Romanian, Indonesian
+  } else if (lang === 'ro' || lang === 'id' || lang === 'el') {
+    // Romanian, Indonesian, Greek
     lang = 'it'; // e.g. 36.660
-  } else if (lang === 'sv' || lang === 'af') {
-    // Swedish, Afrikaans
+  } else if (lang === 'sv' || lang === 'af' || lang === 'lt') {
+    // Swedish, Afrikaans, Lithuanian
     lang = 'fr'; // e.g. 36 660
   } else if (lang === 'hi' || lang === 'ko') {
     localeMode = 2;
